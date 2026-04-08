@@ -6,6 +6,7 @@ import { BatchProcessor } from '@/lib/batch/processor';
 import { generateExcelOutput } from '@/lib/excel/generator';
 import { logger } from '@/lib/utils/logger';
 import { jobManager } from '@/lib/jobs/job-manager';
+import { SCREENSHOT_CONFIG } from '@/lib/utils/screenshot-config';
 import fs from 'fs';
 import path from 'path';
 
@@ -21,8 +22,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Use SCREENSHOT_STORAGE_PATH from config (respects env var)
+        const screenshotsDir = SCREENSHOT_CONFIG.STORAGE_PATH;
+        
         // Create screenshots directory if not exists
-        const screenshotsDir = path.join(process.cwd(), 'public', 'screenshots');
         if (!fs.existsSync(screenshotsDir)) {
             fs.mkdirSync(screenshotsDir, { recursive: true });
         }
@@ -72,10 +75,11 @@ async function processInBackground(jobId: string, shops: Shop[], screenshotsDir:
 
         logger.info(`Excel file saved: ${outputFilename}`);
 
-        // Update job as completed
+        // Update job as completed - use correct download URL
+        const downloadUrl = `/api/download?file=${encodeURIComponent(outputFilename)}&path=${encodeURIComponent(screenshotsDir)}`;
         jobManager.updateJob(jobId, {
             status: 'completed',
-            downloadUrl: `/api/download?file=${outputFilename}`
+            downloadUrl: downloadUrl
         });
 
     } catch (error) {

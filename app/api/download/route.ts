@@ -1,5 +1,6 @@
 // API route for downloading Excel result files
 import { NextRequest, NextResponse } from 'next/server';
+import { SCREENSHOT_CONFIG } from '@/lib/utils/screenshot-config';
 import fs from 'fs';
 import path from 'path';
 
@@ -10,6 +11,7 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const filename = searchParams.get('file');
+        const filePathParam = searchParams.get('path');
 
         if (!filename) {
             return NextResponse.json({ error: 'Filename required' }, { status: 400 });
@@ -17,11 +19,18 @@ export async function GET(request: NextRequest) {
 
         // Security: prevent path traversal
         const safeFilename = path.basename(filename);
-        const filePath = path.join(process.cwd(), 'public', 'screenshots', safeFilename);
+        
+        // Use provided path or default to SCREENSHOT_CONFIG
+        let screenshotsDir = SCREENSHOT_CONFIG.STORAGE_PATH;
+        if (filePathParam) {
+            screenshotsDir = decodeURIComponent(filePathParam);
+        }
+
+        const filePath = path.join(screenshotsDir, safeFilename);
 
         // Check if file exists
         if (!fs.existsSync(filePath)) {
-            return NextResponse.json({ error: 'File not found' }, { status: 404 });
+            return NextResponse.json({ error: 'File not found', path: filePath }, { status: 404 });
         }
 
         // Read file asynchronously (non-blocking)
