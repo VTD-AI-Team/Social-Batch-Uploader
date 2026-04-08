@@ -1,0 +1,12 @@
+{
+  "name": "Facebook Login Session",
+  "domain": ".facebook.com",
+  "expirationDate": 1735689600,
+  "hostOnly": false,
+  "httpOnly": true,
+  "path": "/",
+  "sameSite": "no_restriction",
+  "secure": true,
+  "session": false,
+  "value": "PLACEHOLDER_COOKIE_VALUE"
+}
